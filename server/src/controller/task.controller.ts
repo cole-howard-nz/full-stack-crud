@@ -13,17 +13,27 @@ export const getTasks = async (req: Request, res: Response) => {
 
 export const createTask = async (req: Request, res: Response) => {
   const task = await prisma.task.create({
-    data: { title: req.body.title, userId: req.user!.id },
+    data: { title: req.body.title, description: req.body.description, userId: req.user!.id },
   });
   res.json(task);
 };
 
 export const updateTask = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const task = await prisma.task.updateMany({
-    where: { id, userId: req.user!.id },
+  
+  const existingTask = await prisma.task.findFirst({
+    where: { id, userId: req.user!.id }
+  });
+  
+  if (!existingTask) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  
+  const task = await prisma.task.update({
+    where: { id },
     data: req.body,
   });
+  
   res.json(task);
 };
 
